@@ -138,27 +138,27 @@ public class ExpBankListener implements Listener {
 				BlockFace blockface = BlockFace.NORTH;
 				for (int numdirection = 0; numdirection <= 5; ++numdirection) {
 					switch (numdirection) {
-					case 1: {
+					case 1:
 						blockface = BlockFace.NORTH;
-					}
-					case 2: {
+						break;
+					case 2:
 						blockface = BlockFace.EAST;
-					}
-					case 3: {
+						break;
+					case 3:
 						blockface = BlockFace.SOUTH;
-					}
-					case 4: {
+						break;
+					case 4:
 						blockface = BlockFace.WEST;
-					}
-					case 5: {
+						break;
+					case 5:
 						blockface = BlockFace.UP;
 						break;
 					}
-					}
-					if (block.getRelative(blockface).getType() == Material.SIGN_POST) {
-						System.out.println("sign_post");
+
+					Material blockType = block.getRelative(blockface).getType();
+					if (blockType == Material.WALL_SIGN || blockType == Material.SIGN_POST) {
 						final Sign sign2 = (Sign) block.getRelative(blockface).getState();
-						if (sign2.getLine(0).equalsIgnoreCase(ChatColor.stripColor("[expbank]")) && numdirection == 5) {
+						if (sign2.getLine(0).equalsIgnoreCase(ChatColor.stripColor("[expbank]"))) {
 							if (Utils.idIsPlayer(sign2.getLine(ID_LINE), player)) {
 								Utils.collectLevels(player, sign2, Integer.parseInt(sign2.getLine(3)), sign2.getLine(ID_LINE));
 							} else {
