@@ -20,6 +20,7 @@ public class ExpBank extends JavaPlugin
     public static int LevelsMax;
     public static int LevelsWithdraw;
     public static int LevelsDeposit;
+    public static long maxId;
     
     static {
         ExpBank.PermsEnabled = false;
@@ -47,6 +48,8 @@ public class ExpBank extends JavaPlugin
         ExpBank.ReturnAmt = this.getConfig().getDouble("economy.return");
         ExpBank.DepositAmt = this.getConfig().getDouble("economy.deposit");
         ExpBank.WithdrawAmt = this.getConfig().getDouble("economy.withdraw");
+        ExpBank.maxId = this.getConfig().getLong("ids.max", 1);
+        Utils.plugin = this;
         this.getServer().getPluginManager().registerEvents((Listener)new ExpBankListener(this), (Plugin)this);
     }
     
