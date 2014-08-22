@@ -1,0 +1,11 @@
+name: ExpBank
+version: 1.5
+description: ExpBank allows you store experience into signs.
+author: darkmage0252
+main: me.darkmage0252.ExpBank.ExpBank
+softdepend: [Vault]
+permissions:
+  expbank.*:
+    description: all access
+  expbank.create:
+    description: allows you to create a expbank
