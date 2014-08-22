@@ -17,7 +17,7 @@ public class Utils {
 	static Permission permissions;
 
 	static {
-		Utils.prefix = ChatColor.BLUE + "[ExpBank]";
+		Utils.prefix = ChatColor.BLUE + "[ModulExpBank] ";
 		Utils.PermsEnabled = ExpBank.PermsEnabled;
 		Utils.EconomyEnabled = ExpBank.EconomyEnabled;
 		Utils.permissions = ExpBank.permission;
@@ -47,10 +47,10 @@ public class Utils {
 
 	public static void collectLevels(final Player player, final Sign sign, final Integer amount, String idLine) {
 		player.setLevel(player.getLevel() + Integer.parseInt(sign.getLine(3)));
-		player.sendMessage(String.valueOf(Utils.prefix) + " You have collected your levels.");
+		player.sendMessage(String.valueOf(Utils.prefix) + "Tu as récupéré tes niveaux");
 		if (ExpBank.ReturnAmt != 0.0) {
 			deposit(player, ExpBank.ReturnAmt);
-			player.sendMessage(String.valueOf(Utils.prefix) + " " + ExpBank.ReturnAmt + " has been returned to you.");
+			player.sendMessage(String.valueOf(Utils.prefix) + ExpBank.economy.format(ExpBank.ReturnAmt) + " t'ont été rendus");
 		}
 		plugin.getConfig().set("ids.db.id" + idForLine(idLine), null);
 		plugin.saveConfig();

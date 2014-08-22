@@ -19,11 +19,9 @@ public class ExpBankListener implements Listener {
 	private static final int PLAYER_LINE = 1;
 	private static final int ID_LINE = 2;
 	public ExpBank plugin;
-	String prefix;
 
 	public ExpBankListener(final ExpBank instance) {
 		super();
-		this.prefix = ChatColor.BLUE + "[ExpBank]";
 		this.plugin = instance;
 	}
 
@@ -42,17 +40,17 @@ public class ExpBankListener implements Listener {
 					event.setLine(ID_LINE, ChatColor.DARK_GRAY + "#" + id);
 					event.setLine(PLAYER_LINE, ChatColor.GREEN + player.getName());
 					event.setLine(3, "0");
-					player.sendMessage(String.valueOf(this.prefix) + " created.");
+					player.sendMessage(String.valueOf(Utils.prefix) + "Créée");
 					if (ExpBank.CreateAmt > 0.0) {
-						player.sendMessage(String.valueOf(this.prefix) + " You have been charged " + ExpBank.CreateAmt);
+						player.sendMessage(String.valueOf(Utils.prefix) + "Tu viens de payer " + ExpBank.CreateAmt);
 					}
 				} else {
-					player.sendMessage(String.valueOf(this.prefix) + " Not enough " + ExpBank.economy.currencyNamePlural() + " you need "
-							+ this.plugin.getConfig().getDouble("economy.create") + " " + ExpBank.economy.currencyNamePlural());
+					player.sendMessage(String.valueOf(Utils.prefix) + "Pas assez de " + ExpBank.economy.currencyNamePlural() + " tu as besoin de "
+							+ ExpBank.economy.format(this.plugin.getConfig().getDouble("economy.create")));
 					event.getBlock().breakNaturally();
 				}
 			} else {
-				player.sendMessage(String.valueOf(this.prefix) + " failed to create you dont have permission to do this!");
+				player.sendMessage(String.valueOf(Utils.prefix) + "Création échouée car tu n'as pas la permission!");
 				event.getBlock().breakNaturally();
 			}
 		}
@@ -69,22 +67,21 @@ public class ExpBankListener implements Listener {
 				sign.setLine(3, sign.getLine(PLAYER_LINE));
 				sign.setLine(PLAYER_LINE, "");
 				sign.update(true);
-				player.sendMessage(String.valueOf(this.prefix) + " Converting...");
+				player.sendMessage(String.valueOf(Utils.prefix) + "Conversion...");
 			}
 			if (sign.getLine(0).equals(ChatColor.stripColor("[ExpBank]")) && Utils.idIsPlayer(sign.getLine(ID_LINE), player)) {
-				
+
 				int expInSign = Integer.parseInt(sign.getLine(3));
-				
+
 				if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
 					if (player.getLevel() >= ExpBank.LevelsDeposit && player.getLevel() > 0) {
 						if (expInSign >= ExpBank.LevelsMax) {
-							player.sendMessage(String.valueOf(this.prefix) + " I can only hold up to " + ExpBank.LevelsMax + " Levels");
+							player.sendMessage(String.valueOf(Utils.prefix) + "Je ne peux contenir que " + ExpBank.LevelsMax + " niveaux");
 						} else {
 							if (ExpBank.DepositAmt != 0.0) {
 								Utils.charge(player, ExpBank.DepositAmt);
 								if (ExpBank.DepositAmt > 0.0) {
-									player.sendMessage(String.valueOf(this.prefix) + " You have been charged " + ExpBank.DepositAmt + " "
-											+ ExpBank.economy.currencyNamePlural());
+									player.sendMessage(String.valueOf(Utils.prefix) + "Tu viens de payer " + ExpBank.economy.format(ExpBank.DepositAmt));
 								}
 							}
 							player.setLevel(player.getLevel() - ExpBank.LevelsDeposit);
@@ -94,14 +91,14 @@ public class ExpBankListener implements Listener {
 							sign.update(true);
 						}
 					} else {
-						player.sendMessage(String.valueOf(this.prefix) + " You need atleast " + ExpBank.LevelsDeposit + " Levels");
+						player.sendMessage(String.valueOf(Utils.prefix) + "Tu as besoin d'au moins " + ExpBank.LevelsDeposit + " niveaux");
 					}
 				} else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 					if (expInSign >= ExpBank.LevelsWithdraw) {
 						if (ExpBank.WithdrawAmt != 0.0) {
 							Utils.charge(player, ExpBank.WithdrawAmt);
 							if (ExpBank.WithdrawAmt > 0.0) {
-								player.sendMessage(String.valueOf(this.prefix) + " You have been charged " + ExpBank.WithdrawAmt
+								player.sendMessage(String.valueOf(Utils.prefix) + "Tu viens de payer " + ExpBank.economy.format(ExpBank.WithdrawAmt)
 										+ ExpBank.economy.currencyNamePlural());
 							}
 						}
@@ -111,7 +108,7 @@ public class ExpBankListener implements Listener {
 						sign.setLine(PLAYER_LINE, Utils.colorForExp(samount) + player.getName());
 						sign.update(true);
 					} else {
-						player.sendMessage(String.valueOf(this.prefix) + " You need atleast " + ExpBank.LevelsWithdraw + " Levels");
+						player.sendMessage(String.valueOf(Utils.prefix) + "Tu as besoin d'au moins " + ExpBank.LevelsWithdraw + " niveaux");
 					}
 				}
 			}
@@ -131,7 +128,7 @@ public class ExpBankListener implements Listener {
 					} else {
 						event.setCancelled(true);
 						sign.update(true);
-						player.sendMessage(String.valueOf(this.prefix) + " Thats not your's!");
+						player.sendMessage(String.valueOf(Utils.prefix) + "Ce n'est pas à toi !");
 					}
 				}
 			} else {
@@ -164,7 +161,7 @@ public class ExpBankListener implements Listener {
 							} else {
 								event.setCancelled(true);
 								sign2.update(true);
-								player.sendMessage(String.valueOf(this.prefix) + " Thats not your's!");
+								player.sendMessage(String.valueOf(Utils.prefix) + "Ce n'est pas à toi !");
 							}
 						}
 					}
