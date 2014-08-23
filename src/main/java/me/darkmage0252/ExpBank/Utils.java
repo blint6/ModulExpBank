@@ -1,7 +1,5 @@
 package me.darkmage0252.ExpBank;
 
-import java.util.UUID;
-
 import net.milkbowl.vault.permission.Permission;
 
 import org.bukkit.ChatColor;
@@ -52,19 +50,33 @@ public class Utils {
 			deposit(player, ExpBank.ReturnAmt);
 			player.sendMessage(String.valueOf(Utils.prefix) + ExpBank.economy.format(ExpBank.ReturnAmt) + " t'ont été rendus");
 		}
-		plugin.getConfig().set("ids.db.id" + idForLine(idLine), null);
-		plugin.saveConfig();
 	}
 
 	public static boolean idIsPlayer(final String idLine, final OfflinePlayer player) {
-		String uuidString = plugin.getConfig().getString("ids.db.id" + idForLine(idLine));
+		Long playerId = plugin.getConfig().getLong("ids.db.uuid" + player.getUniqueId().toString());
 
-		if (uuidString == null) {
+		if (playerId == null) {
 			return false;
 		}
 
-		UUID uuid = UUID.fromString(uuidString);
-		return player.getUniqueId().equals(uuid);
+		return playerId == idForLine(idLine);
+	}
+
+	public static long idForPlayer(final OfflinePlayer player) {
+		long playerId = plugin.getConfig().getLong("ids.db.uuid" + player.getUniqueId().toString());
+
+		if (playerId > 0) {
+			return playerId;
+		}
+
+		synchronized (plugin) {
+			playerId = ExpBank.maxId;
+			plugin.getConfig().set("ids.max", ++ExpBank.maxId);
+			plugin.getConfig().set("ids.db.uuid" + player.getUniqueId().toString(), playerId);
+			plugin.saveConfig();
+		}
+
+		return playerId;
 	}
 
 	public static long idForLine(String idLine) {
@@ -86,5 +98,24 @@ public class Utils {
 			return Utils.permissions.has(player, perm);
 		}
 		return player.isOp();
+	}
+
+	/**
+	 * Attempt to upgrade an original ExpBank sign to ModulExpBank.
+	 * 
+	 * @param sign
+	 *            the sign
+	 */
+	public static void attemptToUpgrade(final Sign sign, final Player player) {
+		String line = sign.getLine(ExpBankListener.ID_LINE);
+
+		if (line == null || !ChatColor.stripColor(line).startsWith("#")) {
+			int expInSign = Integer.parseInt(sign.getLine(3));
+
+			sign.setLine(ExpBankListener.ID_LINE, ChatColor.DARK_GRAY + "#" + idForPlayer(player));
+			sign.setLine(ExpBankListener.PLAYER_LINE, colorForExp(expInSign) + player.getName());
+			sign.update(true);
+			player.sendMessage(String.valueOf(Utils.prefix) + "Conversion en ModulExpBank réussie !");
+		}
 	}
 }

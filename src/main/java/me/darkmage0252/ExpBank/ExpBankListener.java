@@ -16,8 +16,8 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class ExpBankListener implements Listener {
-	private static final int PLAYER_LINE = 1;
-	private static final int ID_LINE = 2;
+	public static final int PLAYER_LINE = 1;
+	public static final int ID_LINE = 2;
 	public ExpBank plugin;
 
 	public ExpBankListener(final ExpBank instance) {
@@ -31,10 +31,7 @@ public class ExpBankListener implements Listener {
 		if (event.getLine(0).equalsIgnoreCase(ChatColor.stripColor("[expbank]"))) {
 			if (Utils.hasPerm(player, "expbank.create")) {
 				if (Utils.charge(player, ExpBank.CreateAmt)) {
-					long id = ExpBank.maxId;
-					plugin.getConfig().set("ids.max", ++ExpBank.maxId);
-					plugin.getConfig().set("ids.db.id" + id, player.getUniqueId().toString());
-					plugin.saveConfig();
+					long id = Utils.idForPlayer(player);
 
 					event.setLine(0, "[ExpBank]");
 					event.setLine(ID_LINE, ChatColor.DARK_GRAY + "#" + id);
@@ -69,49 +66,55 @@ public class ExpBankListener implements Listener {
 				sign.update(true);
 				player.sendMessage(String.valueOf(Utils.prefix) + "Conversion...");
 			}
-			if (sign.getLine(0).equals(ChatColor.stripColor("[ExpBank]")) && Utils.idIsPlayer(sign.getLine(ID_LINE), player)) {
 
-				int expInSign = Integer.parseInt(sign.getLine(3));
+			if (sign.getLine(0).equals(ChatColor.stripColor("[ExpBank]"))) {
 
-				if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-					if (player.getLevel() >= ExpBank.LevelsDeposit && player.getLevel() > 0) {
-						if (expInSign >= ExpBank.LevelsMax) {
-							player.sendMessage(String.valueOf(Utils.prefix) + "Je ne peux contenir que " + ExpBank.LevelsMax + " niveaux");
+				Utils.attemptToUpgrade(sign, player);
+
+				if (Utils.idIsPlayer(sign.getLine(ID_LINE), player)) {
+					int expInSign = Integer.parseInt(sign.getLine(3));
+
+					if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+						if (player.getLevel() >= ExpBank.LevelsDeposit && player.getLevel() > 0) {
+							if (expInSign >= ExpBank.LevelsMax) {
+								player.sendMessage(String.valueOf(Utils.prefix) + "Je ne peux contenir que " + ExpBank.LevelsMax + " niveaux");
+							} else {
+								if (ExpBank.DepositAmt != 0.0) {
+									Utils.charge(player, ExpBank.DepositAmt);
+									if (ExpBank.DepositAmt > 0.0) {
+										player.sendMessage(String.valueOf(Utils.prefix) + "Tu viens de payer " + ExpBank.economy.format(ExpBank.DepositAmt));
+									}
+								}
+								player.setLevel(player.getLevel() - ExpBank.LevelsDeposit);
+								final int samount = expInSign + ExpBank.LevelsDeposit;
+								sign.setLine(3, new StringBuilder(String.valueOf(samount)).toString());
+								sign.setLine(PLAYER_LINE, Utils.colorForExp(samount) + player.getName());
+								sign.update(true);
+							}
 						} else {
-							if (ExpBank.DepositAmt != 0.0) {
-								Utils.charge(player, ExpBank.DepositAmt);
-								if (ExpBank.DepositAmt > 0.0) {
-									player.sendMessage(String.valueOf(Utils.prefix) + "Tu viens de payer " + ExpBank.economy.format(ExpBank.DepositAmt));
+							player.sendMessage(String.valueOf(Utils.prefix) + "Tu as besoin d'au moins " + ExpBank.LevelsDeposit + " niveaux");
+						}
+					} else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+						if (expInSign >= ExpBank.LevelsWithdraw) {
+							if (ExpBank.WithdrawAmt != 0.0) {
+								Utils.charge(player, ExpBank.WithdrawAmt);
+								if (ExpBank.WithdrawAmt > 0.0) {
+									player.sendMessage(String.valueOf(Utils.prefix) + "Tu viens de payer " + ExpBank.economy.format(ExpBank.WithdrawAmt)
+											+ ExpBank.economy.currencyNamePlural());
 								}
 							}
-							player.setLevel(player.getLevel() - ExpBank.LevelsDeposit);
-							final int samount = expInSign + ExpBank.LevelsDeposit;
+							player.setLevel(player.getLevel() + ExpBank.LevelsWithdraw);
+							final int samount = expInSign - ExpBank.LevelsWithdraw;
 							sign.setLine(3, new StringBuilder(String.valueOf(samount)).toString());
 							sign.setLine(PLAYER_LINE, Utils.colorForExp(samount) + player.getName());
 							sign.update(true);
+						} else {
+							player.sendMessage(String.valueOf(Utils.prefix) + "Tu as besoin d'au moins " + ExpBank.LevelsWithdraw + " niveaux");
 						}
-					} else {
-						player.sendMessage(String.valueOf(Utils.prefix) + "Tu as besoin d'au moins " + ExpBank.LevelsDeposit + " niveaux");
-					}
-				} else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-					if (expInSign >= ExpBank.LevelsWithdraw) {
-						if (ExpBank.WithdrawAmt != 0.0) {
-							Utils.charge(player, ExpBank.WithdrawAmt);
-							if (ExpBank.WithdrawAmt > 0.0) {
-								player.sendMessage(String.valueOf(Utils.prefix) + "Tu viens de payer " + ExpBank.economy.format(ExpBank.WithdrawAmt)
-										+ ExpBank.economy.currencyNamePlural());
-							}
-						}
-						player.setLevel(player.getLevel() + ExpBank.LevelsWithdraw);
-						final int samount = expInSign - ExpBank.LevelsWithdraw;
-						sign.setLine(3, new StringBuilder(String.valueOf(samount)).toString());
-						sign.setLine(PLAYER_LINE, Utils.colorForExp(samount) + player.getName());
-						sign.update(true);
-					} else {
-						player.sendMessage(String.valueOf(Utils.prefix) + "Tu as besoin d'au moins " + ExpBank.LevelsWithdraw + " niveaux");
 					}
 				}
 			}
+
 		}
 	}
 
@@ -123,6 +126,9 @@ public class ExpBankListener implements Listener {
 			if (block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
 				final Sign sign = (Sign) block.getState();
 				if (sign.getLine(0).equalsIgnoreCase(ChatColor.stripColor("[expbank]"))) {
+
+					Utils.attemptToUpgrade(sign, player);
+
 					if (Utils.idIsPlayer(sign.getLine(ID_LINE), player)) {
 						Utils.collectLevels(player, sign, Integer.parseInt(sign.getLine(3)), sign.getLine(ID_LINE));
 					} else {
@@ -156,6 +162,9 @@ public class ExpBankListener implements Listener {
 					if (blockType == Material.WALL_SIGN || blockType == Material.SIGN_POST) {
 						final Sign sign2 = (Sign) block.getRelative(blockface).getState();
 						if (sign2.getLine(0).equalsIgnoreCase(ChatColor.stripColor("[expbank]"))) {
+
+							Utils.attemptToUpgrade(sign2, player);
+
 							if (Utils.idIsPlayer(sign2.getLine(ID_LINE), player)) {
 								Utils.collectLevels(player, sign2, Integer.parseInt(sign2.getLine(3)), sign2.getLine(ID_LINE));
 							} else {
